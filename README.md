@@ -1,4 +1,5 @@
 #Generador de Contraseñas
+
 ##Descripción
 
 Este proyecto consiste en un generador de contraseñas desarrollado en Python como parte de la asignatura Lógica de Programación.
