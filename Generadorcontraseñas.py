@@ -1,5 +1,8 @@
 import random
 
+
+
+# Evalúa la seguridad de una contraseña según su longitud
 def evaluar_contrasena():
     contrasena = input("Ingrese la contraseña a evaluar: ")
 
@@ -12,10 +15,17 @@ def evaluar_contrasena():
     else:
         print("Contraseña fuerte")
 
+
+
+# Permite al usuario ingresar una contraseña manualmente
 def crear_contrasena_manual():
     contrasena = input("Ingrese su contraseña: ")
     print("Contraseña guardada:", contrasena)
 
+
+
+
+# Genera una contraseña aleatoria usando letras, números y símbolos
 def generar_contrasena():
     
     longitud = int(input("Ingrese la longitud de la contraseña: "))
@@ -33,6 +43,8 @@ def generar_contrasena():
         contrasena += caracter
 
     print("Contraseña generada:", contrasena)
+
+
 
 
 def menu():
@@ -56,7 +68,7 @@ def menu():
             evaluar_contrasena()
 
         elif opcion == "4":
-            print("Saliendo del sistmea. . .")
+            print("Saliendo del sistema. . .")
             break
         
         else:
