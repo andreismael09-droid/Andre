@@ -11,12 +11,14 @@ El programa permite generar contraseñas aleatorias, crear contraseñas manualme
 - Crear contraseñas manualmente.
 - Evaluar la seguridad de una contraseña.
 - Menú interactivo para acceder a las diferentes opciones.
+
 ##Estructuras utilizadas
 Variables
 Funciones
 Condicionales (if, elif, else)
 Bucles (while y for)
 - Librería random
+
 ##Autor
 
 Andre Silva
