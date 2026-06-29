@@ -1,400 +1,178 @@
-"""
-================================================
-  SISTEMA DE AGENDA DE CITAS MÉDICAS
-  Proyecto Integrador - Primer Semestre
-  Ingeniería en Software
-================================================
-"""
+# Lista global para almacenar las citas en la memoria del programa
+citas = []
 
-import os
-from datetime import datetime
-
-# ─────────────────────────────────────────────
-#   DATOS GLOBALES (lista de citas y pacientes)
-# ─────────────────────────────────────────────
-
-citas = []          # Almacena todas las citas
-id_contador = 1     # Contador para IDs únicos de citas
-
-
-# ─────────────────────────────────────────────
-#   FUNCIONES AUXILIARES
-# ─────────────────────────────────────────────
-
-def limpiar_pantalla():
-    """Limpia la consola según el sistema operativo."""
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-
-def mostrar_linea():
-    """Imprime una línea decorativa."""
-    print("=" * 55)
-
-
-def pausar():
-    """Pausa la ejecución hasta que el usuario presione Enter."""
-    input("\n  Presione Enter para continuar...")
-
-
-def validar_fecha(fecha_str):
-    """
-    Valida que la fecha tenga el formato DD/MM/AAAA.
-    Retorna True si es válida, False si no.
-    """
-    try:
-        datetime.strptime(fecha_str, "%d/%m/%Y")
-        return True
-    except ValueError:
-        return False
-
-
-def validar_hora(hora_str):
-    """
-    Valida que la hora tenga el formato HH:MM (24h).
-    Retorna True si es válida, False si no.
-    """
-    try:
-        datetime.strptime(hora_str, "%H:%M")
-        return True
-    except ValueError:
-        return False
-
-
-def validar_cedula(cedula):
-    """
-    Valida que la cédula tenga exactamente 10 dígitos numéricos.
-    """
-    return cedula.isdigit() and len(cedula) == 10
-
-
-def buscar_cita_por_id(id_buscar):
-    """
-    Busca una cita por su ID.
-    Retorna el índice en la lista, o -1 si no se encontró.
-    """
-    for i in range(len(citas)):
-        if citas[i]["id"] == id_buscar:
-            return i
-    return -1
-
-
-def mostrar_cita(cita):
-    """Imprime los datos de una cita de forma ordenada."""
-    print(f"\n  ID Cita      : {cita['id']}")
-    print(f"  Paciente     : {cita['nombre']}")
-    print(f"  Cédula       : {cita['cedula']}")
-    print(f"  Doctor       : {cita['doctor']}")
-    print(f"  Especialidad : {cita['especialidad']}")
-    print(f"  Fecha        : {cita['fecha']}")
-    print(f"  Hora         : {cita['hora']}")
-    print(f"  Motivo       : {cita['motivo']}")
-    print(f"  Estado       : {cita['estado']}")
-
-
-# ─────────────────────────────────────────────
-#   MÓDULO 1 — AGENDAR CITA
-# ─────────────────────────────────────────────
 
 def agendar_cita():
-    """Permite registrar una nueva cita médica."""
-    global id_contador
+    print("\n--- AGENDAR NUEVA CITA ---")
 
-    limpiar_pantalla()
-    mostrar_linea()
-    print("       AGENDAR NUEVA CITA MÉDICA")
-    mostrar_linea()
+    # Pedir datos al usuario
+    cedula = input("Ingrese la cédula del paciente (10 dígitos): ")
 
-    # ── Nombre del paciente ──
-    nombre = input("\n  Nombre completo del paciente: ").strip()
+    # Validación simple de cédula (longitud de 10 dígitos)
+    if len(cedula) != 10 or not cedula.isdigit():
+        print(" Error: La cédula debe tener exactamente 10 números.")
+        return
+
+    nombre = input("Nombre del paciente: ")
     if nombre == "":
-        print("\n  ⚠  El nombre no puede estar vacío.")
-        pausar()
+        print(" Error: El nombre no puede estar vacío.")
         return
 
-    # ── Cédula ──
-    cedula = input("  Cédula (10 dígitos)        : ").strip()
-    if not validar_cedula(cedula):
-        print("\n  ⚠  La cédula debe tener exactamente 10 dígitos numéricos.")
-        pausar()
-        return
+    especialidad = input("Especialidad médica: ")
+    fecha = input("Fecha de la cita (DD/MM/AAAA): ")
+    hora = input("Hora de la cita (HH:MM): ")
+    medico = input("Nombre del médico: ")
 
-    # ── Especialidad ──
-    print("\n  Especialidades disponibles:")
-    print("    1. Medicina General")
-    print("    2. Pediatría")
-    print("    3. Ginecología")
-    print("    4. Cardiología")
-    print("    5. Traumatología")
-
-    opcion_esp = input("\n  Seleccione especialidad (1-5): ").strip()
-    especialidades = {
-        "1": ("Medicina General", "Dr. Carlos Pérez"),
-        "2": ("Pediatría",        "Dra. Ana Gómez"),
-        "3": ("Ginecología",      "Dra. María Torres"),
-        "4": ("Cardiología",      "Dr. Luis Medina"),
-        "5": ("Traumatología",    "Dr. Jorge Ruiz")
-    }
-
-    if opcion_esp not in especialidades:
-        print("\n  ⚠  Opción inválida.")
-        pausar()
-        return
-
-    especialidad, doctor = especialidades[opcion_esp]
-
-    # ── Fecha ──
-    fecha = input("  Fecha de la cita (DD/MM/AAAA): ").strip()
-    if not validar_fecha(fecha):
-        print("\n  ⚠  Formato de fecha incorrecto. Use DD/MM/AAAA.")
-        pausar()
-        return
-
-    # ── Hora ──
-    hora = input("  Hora de la cita (HH:MM, 24h) : ").strip()
-    if not validar_hora(hora):
-        print("\n  ⚠  Formato de hora incorrecto. Use HH:MM (ej: 09:30).")
-        pausar()
-        return
-
-    # ── Verificar que no haya conflicto de horario con el mismo doctor ──
-    for c in citas:
-        if c["doctor"] == doctor and c["fecha"] == fecha and c["hora"] == hora and c["estado"] != "Cancelada":
-            print(f"\n  ⚠  El {doctor} ya tiene una cita el {fecha} a las {hora}.")
-            pausar()
+    # Validación de conflicto de horario (mismo médico, fecha y hora)
+    for cita in citas:
+        if (
+            cita["medico"] == medico
+            and cita["fecha"] == fecha
+            and cita["hora"] == hora
+        ):
+            print(" Error: El médico ya tiene otra cita a esa misma hora.")
             return
 
-    # ── Motivo ──
-    motivo = input("  Motivo de la consulta       : ").strip()
-    if motivo == "":
-        motivo = "No especificado"
-
-    # ── Guardar cita ──
+    # Crear el diccionario con los datos recolectados
     nueva_cita = {
-        "id":           id_contador,
-        "nombre":       nombre,
-        "cedula":       cedula,
-        "doctor":       doctor,
+        "cedula": cedula,
+        "nombre": nombre,
         "especialidad": especialidad,
-        "fecha":        fecha,
-        "hora":         hora,
-        "motivo":       motivo,
-        "estado":       "Pendiente"
+        "fecha": fecha,
+        "hora": hora,
+        "medico": medico,
+        "estado": "Pendiente",  # Estado inicial por defecto
     }
 
+    # Guardar en la lista
     citas.append(nueva_cita)
-    id_contador += 1
+    print(" ¡Cita agendada con éxito!")
 
-    print(f"\n  ✔  Cita registrada con éxito. ID de cita: {nueva_cita['id']}")
-    pausar()
-
-
-# ─────────────────────────────────────────────
-#   MÓDULO 2 — VER TODAS LAS CITAS
-# ─────────────────────────────────────────────
 
 def ver_citas():
-    """Muestra todas las citas registradas."""
-    limpiar_pantalla()
-    mostrar_linea()
-    print("          LISTADO DE CITAS MÉDICAS")
-    mostrar_linea()
+    print("\n--- LISTADO GENERAL DE CITAS ---")
 
     if len(citas) == 0:
-        print("\n  No hay citas registradas aún.")
-        pausar()
+        print("No hay citas registradas en el sistema.")
         return
 
-    for cita in citas:
-        mostrar_cita(cita)
-        print("  " + "-" * 45)
+    # Recorrer la lista para mostrar cada cita ordenada
+    for i in range(len(citas)):
+        c = citas[i]
+        print(
+            f"{i+1}. Paciente: {c['nombre']} | Cédula: {c['cedula']} | "
+            f"Esp: {c['especialidad']} | Fecha: {c['fecha']} a las {c['hora']} | "
+            f"Dr: {c['medico']} | Estado: {c['estado']}"
+        )
 
-    pausar()
-
-
-# ─────────────────────────────────────────────
-#   MÓDULO 3 — BUSCAR CITA POR CÉDULA
-# ─────────────────────────────────────────────
 
 def buscar_por_cedula():
-    """Busca todas las citas de un paciente por su cédula."""
-    limpiar_pantalla()
-    mostrar_linea()
-    print("         BUSCAR CITAS POR CÉDULA")
-    mostrar_linea()
+    print("\n--- BUSCAR PACIENTE ---")
+    cedula_buscar = input("Ingrese la cédula del paciente: ")
+    encontrado = False
 
-    cedula = input("\n  Ingrese la cédula del paciente: ").strip()
-
-    encontradas = []
     for cita in citas:
-        if cita["cedula"] == cedula:
-            encontradas.append(cita)
+        if cita["cedula"] == cedula_buscar:
+            print(
+                f"Cita encontrada -> Paciente: {cita['nombre']} | Fecha: {cita['fecha']} {cita['hora']} | Especialidad: {cita['especialidad']}"
+            )
+            encontrado = True
 
-    if len(encontradas) == 0:
-        print(f"\n  ⚠  No se encontraron citas para la cédula: {cedula}")
-    else:
-        print(f"\n  Se encontraron {len(encontradas)} cita(s):\n")
-        for cita in encontradas:
-            mostrar_cita(cita)
-            print("  " + "-" * 45)
+    if not encontrado:
+        print("No se encontraron citas para esa cédula.")
 
-    pausar()
-
-
-# ─────────────────────────────────────────────
-#   MÓDULO 4 — ACTUALIZAR ESTADO DE CITA
-# ─────────────────────────────────────────────
 
 def actualizar_estado():
-    """Permite cambiar el estado de una cita (Pendiente/Confirmada/Cancelada)."""
-    limpiar_pantalla()
-    mostrar_linea()
-    print("        ACTUALIZAR ESTADO DE CITA")
-    mostrar_linea()
+    print("\n--- ACTUALIZAR ESTADO DE LA CITA ---")
+    ver_citas()  # Mostramos las citas para que el usuario elija
 
-    try:
-        id_cita = int(input("\n  Ingrese el ID de la cita: ").strip())
-    except ValueError:
-        print("\n  ⚠  El ID debe ser un número.")
-        pausar()
+    if len(citas) == 0:
         return
 
-    indice = buscar_cita_por_id(id_cita)
+    posicion = (
+        int(input("\nSeleccione el número de la cita que desea modificar: "))
+        - 1
+    )
 
-    if indice == -1:
-        print(f"\n  ⚠  No se encontró ninguna cita con ID {id_cita}.")
-        pausar()
-        return
+    if posicion >= 0 and posicion < len(citas):
+        print("Estados disponibles: 1. Confirmada | 2. Cancelada")
+        opcion = input("Seleccione el nuevo estado (1 o 2): ")
 
-    print(f"\n  Cita encontrada:")
-    mostrar_cita(citas[indice])
+        if opcion == "1":
+            citas[posicion]["estado"] = "Confirmada"
+            print(" Estado actualizado a 'Confirmada'.")
+        elif opcion == "2":
+            citas[posicion]["estado"] = "Cancelada"
+            print("Estado actualizado a 'Cancelada'.")
+        else:
+            print(" Opción incorrecta.")
+    else:
+        print(" El número de cita ingresado no existe.")
 
-    print("\n  Nuevo estado:")
-    print("    1. Pendiente")
-    print("    2. Confirmada")
-    print("    3. Cancelada")
-
-    opcion = input("\n  Seleccione (1-3): ").strip()
-    estados = {"1": "Pendiente", "2": "Confirmada", "3": "Cancelada"}
-
-    if opcion not in estados:
-        print("\n  ⚠  Opción inválida.")
-        pausar()
-        return
-
-    citas[indice]["estado"] = estados[opcion]
-    print(f"\n  ✔  Estado actualizado a: {estados[opcion]}")
-    pausar()
-
-
-# ─────────────────────────────────────────────
-#   MÓDULO 5 — ELIMINAR CITA
-# ─────────────────────────────────────────────
 
 def eliminar_cita():
-    """Elimina una cita del sistema por su ID."""
-    limpiar_pantalla()
-    mostrar_linea()
-    print("            ELIMINAR CITA")
-    mostrar_linea()
+    print("\n--- ELIMINAR CITA ---")
+    ver_citas()
 
-    try:
-        id_cita = int(input("\n  Ingrese el ID de la cita a eliminar: ").strip())
-    except ValueError:
-        print("\n  ⚠  El ID debe ser un número.")
-        pausar()
+    if len(citas) == 0:
         return
 
-    indice = buscar_cita_por_id(id_cita)
+    posicion = (
+        int(input("\nSeleccione el número de la cita que desea eliminar: "))
+        - 1
+    )
 
-    if indice == -1:
-        print(f"\n  ⚠  No se encontró ninguna cita con ID {id_cita}.")
-        pausar()
-        return
-
-    print(f"\n  Cita a eliminar:")
-    mostrar_cita(citas[indice])
-
-    confirmacion = input("\n  ¿Está seguro de eliminar esta cita? (s/n): ").strip().lower()
-
-    if confirmacion == "s":
-        citas.pop(indice)
-        print("\n  ✔  Cita eliminada correctamente.")
+    if posicion >= 0 and posicion < len(citas):
+        confirmacion = input(
+            f"¿Seguro que quiere eliminar la cita de {citas[posicion]['nombre']}? (s/n): "
+        )
+        if confirmacion.lower() == "s":
+            citas.pop(posicion)  # Borra el elemento de la lista
+            print(" Cita eliminada correctamente.")
+        else:
+            print("Operación cancelada.")
     else:
-        print("\n  ✘  Operación cancelada.")
-
-    pausar()
+        print("Número de cita inválido.")
 
 
-# ─────────────────────────────────────────────
-#   MÓDULO 6 — RESUMEN ESTADÍSTICO
-# ─────────────────────────────────────────────
-
-def ver_resumen():
-    """Muestra un resumen estadístico de las citas."""
-    limpiar_pantalla()
-    mostrar_linea()
-    print("         RESUMEN DEL SISTEMA")
-    mostrar_linea()
-
+def ver_estadisticas():
+    print("\n--- ESTADÍSTICAS DEL SISTEMA ---")
     total = len(citas)
-    pendientes  = 0
-    confirmadas = 0
-    canceladas  = 0
+    print(f"Total de citas registradas hasta el momento: {total}")
 
-    conteo_esp = {}
+    # Contadores simples para estados básicos
+    confirmadas = 0
+    canceladas = 0
+    pendientes = 0
 
     for cita in citas:
-        # Contar por estado
-        if cita["estado"] == "Pendiente":
-            pendientes += 1
-        elif cita["estado"] == "Confirmada":
+        if cita["estado"] == "Confirmada":
             confirmadas += 1
         elif cita["estado"] == "Cancelada":
             canceladas += 1
-
-        # Contar por especialidad
-        esp = cita["especialidad"]
-        if esp in conteo_esp:
-            conteo_esp[esp] += 1
         else:
-            conteo_esp[esp] = 1
+            pendientes += 1
 
-    print(f"\n  Total de citas registradas : {total}")
-    print(f"  ─ Pendientes               : {pendientes}")
-    print(f"  ─ Confirmadas              : {confirmadas}")
-    print(f"  ─ Canceladas               : {canceladas}")
+    print(f" - Citas Confirmadas: {confirmadas}")
+    print(f" - Citas Canceladas: {canceladas}")
+    print(f" - Citas Pendientes: {pendientes}")
 
-    if len(conteo_esp) > 0:
-        print("\n  Citas por especialidad:")
-        for esp, cantidad in conteo_esp.items():
-            print(f"    • {esp:<22}: {cantidad}")
-
-    pausar()
-
-
-# ─────────────────────────────────────────────
-#   MENÚ PRINCIPAL
-# ─────────────────────────────────────────────
 
 def menu_principal():
-    """Muestra el menú principal y gestiona la navegación."""
+    # Bucle infinito para mantener el menú corriendo hasta que se elija 'Salir'
     while True:
-        limpiar_pantalla()
-        mostrar_linea()
-        print("     🏥  SISTEMA DE AGENDA MÉDICA  🏥")
-        mostrar_linea()
-        print()
-        print("    1.  Agendar nueva cita")
-        print("    2.  Ver todas las citas")
-        print("    3.  Buscar citas por cédula")
-        print("    4.  Actualizar estado de cita")
-        print("    5.  Eliminar cita")
-        print("    6.  Ver resumen estadístico")
-        print("    0.  Salir")
-        print()
-        mostrar_linea()
+        print("\n=================================")
+        print("   SISTEMA DE CITAS MÉDICAS      ")
+        print("=================================")
+        print("1. Agendar Cita")
+        print("2. Ver Historial Completo")
+        print("3. Buscar Paciente por Cédula")
+        print("4. Actualizar Estado de Cita")
+        print("5. Eliminar Cita")
+        print("6. Ver Estadísticas")
+        print("7. Salir")
 
-        opcion = input("    Seleccione una opción: ").strip()
+        opcion = input("Seleccione una opción (1-7): ")
 
         if opcion == "1":
             agendar_cita()
@@ -407,20 +185,13 @@ def menu_principal():
         elif opcion == "5":
             eliminar_cita()
         elif opcion == "6":
-            ver_resumen()
-        elif opcion == "0":
-            limpiar_pantalla()
-            print("\n  Gracias por usar el Sistema de Agenda Médica.")
-            print("  ¡Hasta luego!\n")
-            break
+            ver_estadisticas()
+        elif opcion == "7":
+            print("\nMuchas gracias por usar nuestro sistema. ¡Hasta pronto!")
+            break  # Rompe el bucle while y cierra el programa
         else:
-            print("\n  ⚠  Opción inválida. Intente de nuevo.")
-            pausar()
+            print(" Opción inválida. Intente de nuevo.")
 
 
-# ─────────────────────────────────────────────
-#   PUNTO DE ENTRADA DEL PROGRAMA
-# ─────────────────────────────────────────────
-
-if __name__ == "__main__":
-    menu_principal()
+# Iniciar el programa principal
+menu_principal()
